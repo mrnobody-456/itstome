@@ -1,0 +1,279 @@
+// frontend react application
+
+
+// install dependencies
+
+npx create-react-app portfolio-tracker
+cd portfolio-tracker
+npm install axios react-router-dom
+
+//file structure
+
+src/
+  components/
+    Dashboard.js
+    StockForm.js
+    StockList.js
+  App.js
+  api.js
+
+// app. js
+
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Dashboard from "./components/Dashboard";
+import StockForm from "./components/StockForm";
+import StockList from "./components/StockList";
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/add-stock" element={<StockForm />} />
+        <Route path="/edit-stock/:id" element={<StockForm />} />
+        <Route path="/stocks" element={<StockList />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+
+
+// dashboard. js
+
+import React from "react";
+
+function Dashboard() {
+  return (
+    <div>
+      <h1>Portfolio Dashboard</h1>
+      <p>Key metrics about your portfolio will be displayed here.</p>
+    </div>
+  );
+}
+
+export default Dashboard;
+
+//stockform. js
+
+
+import React, { useState } from "react";
+import axios from "../api";
+
+function StockForm({ isEditing = false, initialData = {}, onSubmit }) {
+  const [formData, setFormData] = useState(initialData);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (isEditing) {
+        await axios.put(`/stocks/${formData.id}`, formData);
+      } else {
+        await axios.post("/stocks", formData);
+      }
+      onSubmit();
+    } catch (error) {
+      console.error("Error saving stock", error);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        placeholder="Stock Name"
+        value={formData.name || ""}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        required
+      />
+      <input
+        type="text"
+        placeholder="Ticker"
+        value={formData.ticker || ""}
+        onChange={(e) => setFormData({ ...formData, ticker: e.target.value })}
+        required
+      />
+      <input
+        type="number"
+        placeholder="Quantity"
+        value={formData.quantity || ""}
+        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+        required
+      />
+      <input
+        type="number"
+        placeholder="Buy Price"
+        value={formData.buyPrice || ""}
+        onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
+        required
+      />
+      <button type="submit">{isEditing ? "Update" : "Add"} Stock</button>
+    </form>
+  );
+}
+
+export default StockForm;
+
+// stocklist. js
+
+
+import React, { useEffect, useState } from "react";
+import axios from "../api";
+
+function StockList() {
+  const [stocks, setStocks] = useState([]);
+
+  useEffect(() => {
+    const fetchStocks = async () => {
+      const response = await axios.get("/stocks");
+      setStocks(response.data);
+    };
+    fetchStocks();
+  }, []);
+
+  const deleteStock = async (id) => {
+    await axios.delete(`/stocks/${id}`);
+    setStocks(stocks.filter((stock) => stock.id !== id));
+  };
+
+  return (
+    <div>
+      <h2>Stock Holdings</h2>
+      <ul>
+        {stocks.map((stock) => (
+          <li key={stock.id}>
+            {stock.name} ({stock.ticker}) - {stock.quantity} @ {stock.buyPrice}
+            <button onClick={() => deleteStock(stock.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default StockList;
+
+
+// api. js
+
+import axios from "axios";
+
+const instance = axios.create({
+  baseURL: "https://your-backend-url.com/api",
+});
+
+export default instance;
+
+
+
+
+
+
+
+// back end javaspringboot
+
+
+
+
+// application properties
+
+
+spring.datasource.url=jdbc:mysql://localhost:3306/portfolio_tracker
+spring.datasource.username=root
+spring.datasource.password=yourpassword
+spring.jpa.hibernate.ddl-auto=update
+
+
+
+// entity class:stock
+
+
+import jakarta.persistence.*;
+
+@Entity
+public class Stock {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+    private String ticker;
+    private Integer quantity;
+    private Double buyPrice;
+
+    // Getters and Setters
+}
+
+
+
+
+
+// repository interface
+
+
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface StockRepository extends JpaRepository<Stock, Long> {}
+
+
+// controller
+
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/stocks")
+public class StockController {
+
+    @Autowired
+    private StockRepository stockRepository;
+
+    @GetMapping
+    public List<Stock> getAllStocks() {
+        return stockRepository.findAll();
+    }
+
+    @PostMapping
+    public Stock addStock(@RequestBody Stock stock) {
+        return stockRepository.save(stock);
+    }
+
+    @PutMapping("/{id}")
+    public Stock updateStock(@PathVariable Long id, @RequestBody Stock stock) {
+        Stock existingStock = stockRepository.findById(id).orElseThrow();
+        existingStock.setName(stock.getName());
+        existingStock.setTicker(stock.getTicker());
+        existingStock.setQuantity(stock.getQuantity());
+        existingStock.setBuyPrice(stock.getBuyPrice());
+        return stockRepository.save(existingStock);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteStock(@PathVariable Long id) {
+        stockRepository.deleteById(id);
+    }
+}
+
+
+
+//  database schema
+
+
+CREATE DATABASE portfolio_tracker;
+USE portfolio_tracker;
+
+CREATE TABLE stock (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255),
+  ticker VARCHAR(255),
+  quantity INT,
+  buy_price DOUBLE
+);
