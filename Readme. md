@@ -1,0 +1,231 @@
+
+
+Step 1: Frontend Development (React)
+
+1.1 Setup React Application
+
+1. First, install Node.js and npm (if you haven’t already).
+
+
+2. Open your terminal and run the following commands:
+
+npx create-react-app portfolio-tracker
+cd portfolio-tracker
+npm install axios react-router-dom
+
+
+
+1.2 Organize File Structure
+
+Create the following structure in the src directory:
+
+src/
+  components/
+    Dashboard.js
+    StockForm.js
+    StockList.js
+  App.js
+  api.js
+
+1.3 Create Components
+
+Dashboard.js: Displays portfolio metrics.
+
+StockForm.js: A form for adding or editing stock details.
+
+StockList.js: A list of all stocks with delete functionality.
+
+
+(You can copy the component code into the respective files.)
+
+1.4 Setup API Integration
+
+Create an api.js file to handle API requests:
+
+import axios from "axios";
+
+const instance = axios.create({
+  baseURL: "https://your-backend-url.com/api", // Replace with your backend URL
+});
+
+export default instance;
+
+1.5 Run React App
+
+To run the app, use:
+
+npm start
+
+This will start the app at http://localhost:3000.
+
+
+
+
+Step 2: Backend Development (Java Spring Boot)
+
+2.1 Setup Spring Boot Application
+
+1. Go to Spring Initializr.
+
+
+2. Configure the project with the following dependencies:
+
+Spring Web
+
+Spring Data JPA
+
+MySQL Driver
+
+Spring Boot DevTools
+
+
+
+3. Download the project and import it into your IDE.
+
+
+
+2.2 Configure Database
+
+Edit application.properties (located in src/main/resources):
+
+spring.datasource.url=jdbc:mysql://localhost:3306/portfolio_tracker
+spring.datasource.username=root
+spring.datasource.password=yourpassword
+spring.jpa.hibernate.ddl-auto=update
+
+Replace yourpassword with your MySQL password.
+
+2.3 Create the Stock Entity
+
+In the entity package, create a Stock class:
+
+@Entity
+public class Stock {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String ticker;
+    private Integer quantity;
+    private Double buyPrice;
+    // Getters and Setters
+}
+
+2.4 Create Repository
+
+Create a StockRepository interface in the repository package:
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface StockRepository extends JpaRepository<Stock, Long> {}
+
+2.5 Create REST Controller
+
+Create a StockController class in the controller package:
+
+@RestController
+@RequestMapping("/api/stocks")
+public class StockController {
+    @Autowired
+    private StockRepository stockRepository;
+
+    @GetMapping
+    public List<Stock> getAllStocks() {
+        return stockRepository.findAll();
+    }
+
+    @PostMapping
+    public Stock addStock(@RequestBody Stock stock) {
+        return stockRepository.save(stock);
+    }
+
+    @PutMapping("/{id}")
+    public Stock updateStock(@PathVariable Long id, @RequestBody Stock stock) {
+        Stock existingStock = stockRepository.findById(id).orElseThrow();
+        existingStock.setName(stock.getName());
+        existingStock.setTicker(stock.getTicker());
+        existingStock.setQuantity(stock.getQuantity());
+        existingStock.setBuyPrice(stock.getBuyPrice());
+        return stockRepository.save(existingStock);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteStock(@PathVariable Long id) {
+        stockRepository.deleteById(id);
+    }
+}
+
+2.6 Run the Backend
+
+To run the backend, use:
+
+mvn spring-boot:run
+
+The backend will be accessible at http://localhost:8080/api/stocks.
+
+
+
+
+Step 3: Database Setup (MySQL)
+
+1. Open your MySQL client and run the following commands:
+
+
+
+CREATE DATABASE portfolio_tracker;
+USE portfolio_tracker;
+
+CREATE TABLE stock (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255),
+  ticker VARCHAR(255),
+  quantity INT,
+  buy_price DOUBLE
+);
+
+
+
+
+Step 4: Deploy the Application
+
+4.1 Frontend Deployment
+
+1. Build the React app:
+
+
+
+npm run build
+
+2. Deploy the build folder to a platform like Netlify or Vercel. Follow the instructions for deploying React apps on those platforms.
+
+
+
+4.2 Backend Deployment
+
+1. Package the Spring Boot app:
+
+
+
+mvn clean package
+
+2. Deploy the .jar file to a cloud platform like Heroku or AWS Elastic Beanstalk. Configure the database connection using the platform’s environment variables.
+
+
+
+4.3 Update API URL
+
+In api.js, update the baseURL to your deployed backend URL.
+
+
+
+
+Step 5: Testing
+
+1. Launch the React app in your browser.
+
+
+2. Test adding, editing, deleting, and viewing stocks.
+
+
+3. Ensure that the live stock prices and portfolio calculations workcorrectly. 
+
